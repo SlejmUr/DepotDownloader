@@ -31,6 +31,7 @@ Parameter | Description
 --------- | -----------
 -app \<#>				| the AppID to download.
 -depot \<#>				| the DepotID to download.
+-ignore-depot \<#>		| the DepotID to ignore when downloading.
 -manifest \<id>			| manifest id of content to download (requires -depot, default: current for branch).
 -ugc \<#>				| the UGC ID to download.
 -beta \<branchname>		| download from specified branch if available (default: Public).
