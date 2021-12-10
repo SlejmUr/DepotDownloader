@@ -215,7 +215,6 @@ namespace DepotDownloader
 
                 var depotIdList = GetParameterList<uint>(args, "-depot");
                 var ignoredepotIdList = GetParameterList<uint>(args, "-ignore-depot");
-
                 var manifestIdList = GetParameterList<ulong>(args, "-manifest");
                 if (manifestIdList.Count > 0)
                 {
@@ -248,8 +247,6 @@ namespace DepotDownloader
                 {
                     ignoredepotIdList.Add(ContentDownloader.DONTUSE_DEPOT_ID);
                 }
-
-
                 if (InitializeSteam(username, password))
                 {
                     try

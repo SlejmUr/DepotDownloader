@@ -488,8 +488,6 @@ namespace DepotDownloader
             var depotIdsExpected = depotManifestIds.Select(x => x.Item1).ToList();
 
             var ignorelist = new List<uint>();
-            var ignoredepotId = ignoredepotIdList.Select(x => x).ToList();
-
             ignorelist.AddRange(ignoredepotIdList);
 
 
@@ -580,7 +578,6 @@ namespace DepotDownloader
                     throw new ContentDownloaderException(String.Format("Depot {0} not listed for app {1}", string.Join(", ", remainingDepotIds), appId));
                 }
             }
-
             var infos = new List<DepotDownloadInfo>();
 
             foreach (var depotManifest in depotManifestIds)
