@@ -214,6 +214,8 @@ namespace DepotDownloader
                 var isUGC = false;
 
                 var depotIdList = GetParameterList<uint>(args, "-depot");
+                var ignoredepotIdList = GetParameterList<uint>(args, "-ignore-depot");
+
                 var manifestIdList = GetParameterList<ulong>(args, "-manifest");
                 if (manifestIdList.Count > 0)
                 {
@@ -222,7 +224,6 @@ namespace DepotDownloader
                         Console.WriteLine("Error: -manifest requires one id for every -depot specified");
                         return 1;
                     }
-
                     var zippedDepotManifest = depotIdList.Zip(manifestIdList, (depotId, manifestId) => (depotId, manifestId));
                     depotManifestIds.AddRange(zippedDepotManifest);
                 }
@@ -231,11 +232,29 @@ namespace DepotDownloader
                     depotManifestIds.AddRange(depotIdList.Select(depotId => (depotId, ContentDownloader.INVALID_MANIFEST_ID)));
                 }
 
+                // ignoredepotIdList
+                if (ignoredepotIdList.Equals(depotIdList))
+                {
+                    Console.WriteLine("Error: -ignore-depot is same as -depot!");
+                    return 1;
+                }
+                var isEqualed = ignoredepotIdList.Where(ignoredepot => depotIdList.Any(depot => depot == ignoredepot)).ToList();
+                if (isEqualed.Count > 0)
+                {
+                    Console.WriteLine("Error: -ignore-depot contains item that in -depot!");
+                    return 1;
+                }
+                if (ignoredepotIdList.Count == 0)
+                {
+                    ignoredepotIdList.Add(ContentDownloader.DONTUSE_DEPOT_ID);
+                }
+
+
                 if (InitializeSteam(username, password))
                 {
                     try
                     {
-                        await ContentDownloader.DownloadAppAsync(appId, depotManifestIds, branch, os, arch, language, lv, isUGC).ConfigureAwait(false);
+                        await ContentDownloader.DownloadAppAsync(appId, depotManifestIds, ignoredepotIdList, branch, os, arch, language, lv, isUGC).ConfigureAwait(false);
                     }
                     catch (Exception ex) when (
                         ex is ContentDownloaderException
@@ -359,6 +378,7 @@ namespace DepotDownloader
             return list;
         }
 
+
         static void PrintUsage()
         {
             Console.WriteLine();
@@ -374,6 +394,7 @@ namespace DepotDownloader
             Console.WriteLine("Parameters:");
             Console.WriteLine("\t-app <#>\t\t\t\t- the AppID to download.");
             Console.WriteLine("\t-depot <#>\t\t\t\t- the DepotID to download.");
+            Console.WriteLine("\t-ignore-depot <#>\t\t\t\t- the DepotID to ignore when downloading.");
             Console.WriteLine("\t-manifest <id>\t\t\t- manifest id of content to download (requires -depot, default: current for branch).");
             Console.WriteLine("\t-beta <branchname>\t\t\t- download from specified branch if available (default: Public).");
             Console.WriteLine("\t-betapassword <pass>\t\t- branch password if applicable.");

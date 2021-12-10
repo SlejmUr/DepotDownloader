@@ -20,6 +20,7 @@ namespace DepotDownloader
     {
         public const uint INVALID_APP_ID = uint.MaxValue;
         public const uint INVALID_DEPOT_ID = uint.MaxValue;
+        public const uint DONTUSE_DEPOT_ID = uint.MaxValue;
         public const ulong INVALID_MANIFEST_ID = ulong.MaxValue;
         public const string DEFAULT_BRANCH = "Public";
 
@@ -386,7 +387,7 @@ namespace DepotDownloader
             }
             else if (details?.hcontent_file > 0)
             {
-                await DownloadAppAsync(appId, new List<(uint, ulong)> { (appId, details.hcontent_file) }, DEFAULT_BRANCH, null, null, null, false, true);
+                await DownloadAppAsync(appId, new List<(uint, ulong)> { (appId, details.hcontent_file) }, new List<uint> { DONTUSE_DEPOT_ID }, DEFAULT_BRANCH, null, null, null, false, true);
             }
             else
             {
@@ -413,7 +414,7 @@ namespace DepotDownloader
             }
             else
             {
-                await DownloadAppAsync(appId, new List<(uint, ulong)> { (appId, ugcId) }, DEFAULT_BRANCH, null, null, null, false, true);
+                await DownloadAppAsync(appId, new List<(uint, ulong)> { (appId, ugcId) }, new List<uint> { DONTUSE_DEPOT_ID }, DEFAULT_BRANCH, null, null, null, false, true);
             }
         }
 
@@ -449,7 +450,7 @@ namespace DepotDownloader
             File.Move(fileStagingPath, fileFinalPath);
         }
 
-        public static async Task DownloadAppAsync(uint appId, List<(uint depotId, ulong manifestId)> depotManifestIds, string branch, string os, string arch, string language, bool lv, bool isUgc)
+        public static async Task DownloadAppAsync(uint appId, List<(uint depotId, ulong manifestId)> depotManifestIds, List<uint> ignoredepotIdList, string branch, string os, string arch, string language, bool lv, bool isUgc)
         {
             cdnPool = new CDNClientPool(steam3, appId);
 
@@ -485,6 +486,13 @@ namespace DepotDownloader
             var hasSpecificDepots = depotManifestIds.Count > 0;
             var depotIdsFound = new List<uint>();
             var depotIdsExpected = depotManifestIds.Select(x => x.Item1).ToList();
+
+            var ignorelist = new List<uint>();
+            var ignoredepotId = ignoredepotIdList.Select(x => x).ToList();
+
+            ignorelist.AddRange(ignoredepotIdList);
+
+
             var depots = GetSteam3AppSection(appId, EAppInfoSection.Depots);
 
             if (isUgc)
@@ -577,13 +585,19 @@ namespace DepotDownloader
 
             foreach (var depotManifest in depotManifestIds)
             {
-                var info = GetDepotInfo(depotManifest.Item1, appId, depotManifest.Item2, branch);
-                if (info != null)
+                if (ignorelist.Contains(depotManifest.depotId))
                 {
-                    infos.Add(info);
+                    Console.WriteLine("Ignored depotID: {0}", depotManifest.depotId);
+                }
+                else
+                {
+                    var info = GetDepotInfo(depotManifest.Item1, appId, depotManifest.Item2, branch);
+                    if (info != null)
+                    {
+                        infos.Add(info);
+                    }
                 }
             }
-
             try
             {
                 await DownloadSteam3Async(appId, infos).ConfigureAwait(false);
