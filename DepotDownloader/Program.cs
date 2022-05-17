@@ -184,6 +184,7 @@ namespace DepotDownloader
             else
             {
                 #region App downloading
+                ContentDownloader.Config.ManifestDir = GetParameter<string>(args, "-manifestdir");
 
                 var branch = GetParameter<string>(args, "-branch") ?? GetParameter<string>(args, "-beta") ?? ContentDownloader.DEFAULT_BRANCH;
                 ContentDownloader.Config.BetaPassword = GetParameter<string>(args, "-betapassword");
@@ -418,6 +419,7 @@ namespace DepotDownloader
             Console.WriteLine("\t-max-servers <#>\t\t- maximum number of content servers to use. (default: 20).");
             Console.WriteLine("\t-max-downloads <#>\t\t- maximum number of chunks to download concurrently. (default: 8).");
             Console.WriteLine("\t-loginid <#>\t\t- a unique 32-bit integer Steam LogonID in decimal, required if running multiple instances of DepotDownloader concurrently.");
+            Console.WriteLine("\t-manifestdir\t\t\t- using directory to load manifest if cannot be downloaded.");
         }
     }
 }

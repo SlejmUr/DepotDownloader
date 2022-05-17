@@ -96,7 +96,15 @@ namespace DepotDownloader
 
             return true;
         }
+        static string GetManifestDir()
+        {
+            if (string.IsNullOrWhiteSpace(Config.ManifestDir))
+            {
+                return ".DepotDownloader"; //Default if nothing was given
+            }
 
+            return Config.ManifestDir;
+        }
         static bool TestIsFileIncluded(string filename)
         {
             if (!Config.UsingFileList)
@@ -865,13 +873,24 @@ namespace DepotDownloader
                     DepotManifest depotManifest = null;
                     ulong manifestRequestCode = 0;
                     var manifestRequestCodeExpiration = DateTime.MinValue;
-
+                    var manifestdir = GetManifestDir();
                     do
                     {
                         cts.Token.ThrowIfCancellationRequested();
 
                         Server connection = null;
 
+                        if (File.Exists($"{manifestdir}/{depot.id}_{depot.manifestId}.manifest"))
+                        {
+                            Console.WriteLine($"\nManifest exist on the disk! Using that instead of downloading");
+                            depotManifest = DepotManifest.Deserialize(File.ReadAllBytes($"{manifestdir}/{depot.id}_{depot.manifestId}.manifest"));
+                            if (depot.depotKey != null)
+                            {
+                                // if we have the depot key, decrypt the manifest filenames
+                                depotManifest.DecryptFilenames(depot.depotKey);
+                            }
+                            break;
+                        }
                         try
                         {
                             connection = cdnPool.GetConnection(cts.Token);
